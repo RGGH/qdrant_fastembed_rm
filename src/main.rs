@@ -50,16 +50,12 @@ async fn main() -> Result<(), QdrantError> {
         let line = line.expect("Unable to read line");
         let json: Value = serde_json::from_str(&line).expect("Unable to parse JSON");
 
-        // Assuming we want to embed the 'description' field
         if let Some(description) = json.get("description").and_then(|d| d.as_str()) {
             documents.push(description.to_string());
+            payloads.push(json); // Push payload only if description is present
         } else {
             eprintln!("No description found for entry: {}", index);
-            continue;
         }
-
-        // Save the entire JSON object as payload
-        payloads.push(json);
     }
 
     // Generate embeddings
