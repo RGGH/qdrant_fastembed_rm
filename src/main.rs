@@ -57,6 +57,7 @@ async fn main() -> Result<(), QdrantError> {
         if let Some(description) = json.get("description").and_then(|d| d.as_str()) {
             documents.push(description.to_string());
             payloads.push(json); // Push payload only if description is present
+            payloads.push(json); // Push payload only if description is present
         } else {
             eprintln!("No description found for entry: {}", index);
             // Optionally, you might still want to push the payloads with missing descriptions
