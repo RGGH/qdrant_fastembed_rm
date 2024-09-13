@@ -247,3 +247,77 @@ pub async fn search_qdrant(
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use qdrant_client::Qdrant;
+    use serde_json::json;
+    use std::fs::File;
+    use std::io::Write;
+    use tokio;
+
+    #[tokio::test]
+    async fn test_initialize_model() {
+        let model = initialize_model();
+        // Perform an actual check to see if the model is working or initialized
+        assert!(model.embed(vec!["test".to_string()], None).is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_setup_qdrant_collection() {
+        let client = Qdrant::from_url("http://localhost:6334").build().expect("Failed to build Qdrant client");
+        let result = setup_qdrant_collection(&client).await;
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_load_data() {
+        let filename = "test_data.jsonl";
+        let mut file = File::create(filename).expect("Unable to create file");
+        writeln!(file, r#"{{"description": "Test document", "key": "value"}}"#).expect("Unable to write to file");
+
+        let (documents, payloads) = load_data(filename);
+        assert_eq!(documents.len(), 1);
+        assert_eq!(documents[0], "Test document");
+        assert_eq!(payloads.len(), 1);
+        assert_eq!(payloads[0], json!({"description": "Test document", "key": "value"}));
+    }
+
+    #[tokio::test]
+    async fn test_generate_embeddings() {
+        let model = initialize_model();
+        let documents = vec!["Document 1".to_string(), "Document 2".to_string()];
+        let embeddings = generate_embeddings(&model, documents);
+        assert_eq!(embeddings.len(), 2);
+        assert!(embeddings[0].len() > 0);
+    }
+
+    #[tokio::test]
+    async fn test_upsert_points() {
+        let client = Qdrant::from_url("http://localhost:6334").build().expect("Failed to build Qdrant client");
+        let collection_name = "real_estate";
+        let model = initialize_model();
+
+        let documents = vec!["Document 1".to_string(), "Document 2".to_string()];
+        let embeddings = generate_embeddings(&model, documents);
+        let payloads = vec![
+            json!({"description": "Document 1", "key": "value1"}),
+            json!({"description": "Document 2", "key": "value2"})
+        ];
+
+        let result = upsert_points(&client, collection_name, embeddings, payloads).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_search_qdrant() {
+        let client = Qdrant::from_url("http://localhost:6334").build().expect("Failed to build Qdrant client");
+        let model = initialize_model();
+        let collection_name = "real_estate";
+        let query = "test query";
+
+        let result = search_qdrant(&client, &model, collection_name, query).await;
+        assert!(result.is_ok());
+    }
+}
+
