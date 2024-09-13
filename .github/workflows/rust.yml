@@ -19,7 +19,7 @@ jobs:
         ports:
           - 6333:6333
           - 6334:6334
-        options: --volume /home/runner/work/qdrant_fastembed_rm/qdrant_fastembed_rm/storage:/qdrant/storage
+        options: --volume /home/runner/work/qdrant_fastembed_rm/qdrant_storage:/qdrant/storage
 
     steps:
     - uses: actions/checkout@v4
