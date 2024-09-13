@@ -11,8 +11,15 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
+    services:
+      qdrant:
+        image: qdrant/qdrant
+        ports:
+          - 6333:6333
+          - 6334:6334
+        options: --volume /home/runner/work/qdrant_fastembed_rm/qdrant_fastembed_rm/storage:/qdrant/storage
 
     steps:
     - uses: actions/checkout@v4
